@@ -74,7 +74,7 @@ echo "-mm=Deflate -mfb=258 -mpass=15" >> methods.txt
 #cat methods.txt
 
 # get list of files in the zip
-"${P7Z}" l input.zip -slt | sed -n 's:^Path = ::p' > files.txt
+"${P7Z}" l input.zip -slt | grep -B1 'Folder = -' | sed -n 's:^Path = ::p' > files.txt
 
 # iterate over all files
 cat files.txt | while read -r
