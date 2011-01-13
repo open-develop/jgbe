@@ -409,7 +409,9 @@ public class MeBoy extends MIDlet implements CommandListener {
 
 	private static String formatDetails(String details, Throwable exception) {
 		if (debug && exception != null) {
+		#if 0
 			exception.printStackTrace();
+		#endif
 		}
 
 		if (exception != null) {

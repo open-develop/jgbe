@@ -10,9 +10,15 @@
 
 #define LINK_CABLE_TCP_PORT 0x4321
 
-#ifdef USE_JAVA_MOBILE
+#if JAVA_SOURCEVER_14
 	#ifndef USE_JAVA_142
 		#define USE_JAVA_142
+	#endif
+#endif
+	
+#ifdef USE_JAVA_MOBILE
+	#ifndef USE_JAVA_142
+		#error must use USE_JAVA_142
 	#endif
 #endif
 

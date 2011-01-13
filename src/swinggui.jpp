@@ -116,7 +116,7 @@ class MenuItemArray extends VECTOR(JMenuItem) {
 	public boolean contains(Object b) {
 		return (b instanceof JMenuItem) && super.contains(b);
 	}
-	public JMenuItem get(int index) {
+	public JMenuItem getItem(int index) {
 		return (JMenuItem)super.get(index);
 	}
 }
@@ -565,7 +565,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			savestateRadioGroup = new MenuItemArrayGroup();
 			for (int i = 0; i < 10; ++i) {
 				savestateRadioGroup.add(new JRadioButtonMenuItem("Select State " + i), KeyEvent.VK_0 + i);
-				savestateRadioGroup.get(i).setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_0 + i, 0));
+				savestateRadioGroup.getItem(i).setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_0 + i, 0));
 			}
 			savestateRadioGroup.addActionListener(this);
 			savestateRadioGroup.addToMenu(menuState);
@@ -694,10 +694,10 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			enableFullScreen.setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			menuitemMixFrame.setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			for (int i = 0; i < 4; ++i)
-				scaleRadioGroup.get(i).setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
+				scaleRadioGroup.getItem(i).setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			keepAspectRatio.setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			for (int i=0; i<4; ++i)
-				interpolationRadioGroup.get(i).setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
+				interpolationRadioGroup.getItem(i).setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			menuitemIncFrameSkip.setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			menuitemDecFrameSkip.setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			menuitemColorSchemes[0].setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
@@ -710,7 +710,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			menuitemSaveOldestState.setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			menuitemEnableSound.setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			for (int i = 0; i < 4; ++i)
-				soundChannelGroup.get(i).setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
+				soundChannelGroup.getItem(i).setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			menuitemCheats.setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			menuitemEnableCheats.setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
 			menuitemEmuSpeedPlus.setAccelerator(NEXT_KEYSTROKE_FROM_KEYMAP);
