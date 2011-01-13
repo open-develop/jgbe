@@ -1,4 +1,5 @@
 #!/bin/sh
+cd "$1"
 SVNVER=`svnversion 2> /dev/null`
 
 if [ "${SVNVER}" = "exported" ]; then
@@ -28,4 +29,8 @@ if [ "${SVNVER}" = "" ]; then
 	SVNVER="unknown"
 fi
 
-echo $SVNVER
+if [ "${2}" != "" ]; then
+	echo "#define JGBE_VERSION_STRING \"${SVNVER}\";"  > "${2}"
+else
+	echo $SVNVER
+fi
