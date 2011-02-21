@@ -1800,6 +1800,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 				JOptionPane.showMessageDialog(frame, "There was an error loading this ROM!\n("+messages[0]+")" , "Error!", JOptionPane.ERROR_MESSAGE);
 				} break;
 			}
+			cpu.reset(menuitemUseBIOS.getState());
 			resumeEmulation(false);
 		}
 
@@ -1985,16 +1986,11 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 				advancedAudioPropertiesDialog = new AdvancedAudioPropertiesDialog(frame, gui.audioDriver, gui);
 			}
 
-			if (!romfile.equals(""))
-				gui.tryToLoadROM(romfile);
 
 			cheatcodes = new CheatCodeEditor(frame, curcartname);
-
 			cheatcodes.applyCheatCodes(cart);
 
 			gui.loadConfig();
-
-			if (gui.menuitemUseBIOS.getState() && cart != null) cart.loadBios(biosfilename);
 			gui.loadKeyBinds();
 
 			gui.cpu.VC.addListener(gui.grfx);
@@ -2005,10 +2001,10 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			timer.setInitialDelay(250);
 			timer.start();
 
-			if (cart != null)
-				gui.cpu.loadCartridge(cart);
-
 			gui.makeRcFilesMenuItems();
+
+			if (!romfile.equals(""))
+				gui.tryToLoadROM(romfile);
 
 			//DEBUGGER
 			if (debug) {

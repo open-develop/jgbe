@@ -535,7 +535,7 @@ public final class CPU {
 				    //PRINTLN("reading from BIOS rom");
 				}
 				else if (index == 0x100) {
-// 					PRINTLN("reading from 0x100, disableing BIOS rom (PC="+PC+")");
+// 					PRINTLN("reading from 0x100, disabling BIOS rom (PC="+PC+")");
 					BIOS_enabled = false;
 					//reset(false); // reset without forcing mono mode
 					refreshMemMap();
@@ -840,13 +840,15 @@ public final class CPU {
 
 		public static void reset(boolean bios) {
 			if(cartridge == null) return; //Do nothing if no cartridge is inserted
-			BIOS_enabled = bios; // NOTE: bios parameter is not used anymore
+			BIOS_enabled = bios;
+
 			VC.reset();
 			cartridge.CurrentRAMBank=0;
 			cartridge.CurrentROMBank=1;
+
+			setPC(BIOS_enabled?0x00:0x100); // This should be set before refreshing the memmap, or risk setting BIOS_enabled to false
 			refreshMemMap();
 
-			setPC(BIOS_enabled?0x00:0x100); // Right... perhaps we should re-evaluate BIOS_enabled...
 			VC.isCGB = BIOS_enabled?false:isCGB();
 
 			//AF=$01B0
