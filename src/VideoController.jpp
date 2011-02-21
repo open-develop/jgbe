@@ -263,6 +263,7 @@ public final class VideoController {
 			updateMonoColData(0);
 			updateMonoColData(1);
 			updateMonoColData(2);
+			setSpritesOnScanline();
 		}
 	}
 
