@@ -1020,9 +1020,13 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 				addOSDLine("ZOMG CHEATER!!!!");
 			}
 			else if(e.getSource().equals( menuitemUseBIOS )) {
-				if (menuitemUseBIOS.getState()) cart.loadBios(biosfilename);
-				else cart.loadBios("");
 				configStateChanged = true;
+				if(cart != null) {
+					if (menuitemUseBIOS.getState())
+						cart.loadBios(biosfilename);
+					else
+						cart.loadBios("");
+				}
 			}
 			else if(e.getSource().equals( menuitemSetBIOS )) {
 				JFileChooser fc = new JFileChooser(".");
@@ -1035,9 +1039,13 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 					                            JOptionPane.INFORMATION_MESSAGE);
 					else {
 						biosfilename = selFile.getAbsolutePath();
-						if (menuitemUseBIOS.getState()) cart.loadBios(biosfilename);
-						else cart.loadBios("");
 						configStateChanged = true;
+						if(cart != null) {
+							if (menuitemUseBIOS.getState())
+								cart.loadBios(biosfilename);
+							else
+								cart.loadBios("");
+						}
 					}
 				}
 			}
