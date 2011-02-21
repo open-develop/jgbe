@@ -700,10 +700,10 @@ public final class VideoController {
 	 *     the LCD is off (if at all)
 	 *
 	 *     From gmb-spec:
-   *        As long as the display is disabled LY will
-   *        read 0, no INT 40 or INT 48 are generated,
-   *        when the display is re-enabled, it will start
-   *        at LY=0.
+	 *        As long as the display is disabled LY will
+	 *        read 0, no INT 40 or INT 48 are generated,
+	 *        when the display is re-enabled, it will start
+	 *        at LY=0.
 	 *
 	 * ps:   Prehistorik Man does some funky shit at d600 (sub scanline render?).
 	 ****/
