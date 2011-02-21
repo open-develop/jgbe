@@ -1039,12 +1039,10 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 					                            JOptionPane.INFORMATION_MESSAGE);
 					else {
 						biosfilename = selFile.getAbsolutePath();
+						menuitemUseBIOS.setState(true);
 						configStateChanged = true;
 						if(cart != null) {
-							if (menuitemUseBIOS.getState())
-								cart.loadBios(biosfilename);
-							else
-								cart.loadBios("");
+							cart.loadBios(biosfilename);
 						}
 					}
 				}
