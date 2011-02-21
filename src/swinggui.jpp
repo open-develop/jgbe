@@ -1364,7 +1364,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 				FPSCPUCycles = CPU.TotalCycleCount;
 				double emuspeed =  ((int)((((float)ncycles)/((4194304*timeLapse*(CPU.doublespeed?2:1))/1000000000.0f))*10000.0f))/100.0;
 				String titlestr = (cart != null)?" - " + cart.getTitle():"";
-				frame.setTitle(Format142.strformat( "JGBE V"+Version.str+" - %05.02f fps / %06.02f%%"+titlestr,new double[] {(((int)(afps*100))/((double)100)), (double)emuspeed}));
+				frame.setTitle(Format142.strformat( "JGBE V"+Version.str+" - %05.02f fps / %06.02f%%",new double[] {(((int)(afps*100))/((double)100)), (double)emuspeed}) + titlestr);
 				fps = 0;
 				titleUpdateCountDown=4;
 				}
