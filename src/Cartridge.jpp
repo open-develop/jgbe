@@ -183,12 +183,18 @@ public final class Cartridge {
 			default:  MBC=-666; PRINTLN("*UNKNOWN*"); throw new java.io.IOException("unknown MBC type");
 		}
 		PRINTLN(" (MBC"+MBC+")");
-		if(B2I(MM_ROM[0][0x0143]) == 0 ) { //regular gameboy game
-			PRINTLN("Cartridge appears to be a GameBoy game");
+
+		PRINTF("Cartridge contains a ");
+		if(B2I(MM_ROM[0][0x0143]) == 0x80) {
+			PRINTF("GameBoy/GameBoy Color compatible");
+		}
+		else if(B2I(MM_ROM[0][0x0143]) == 0xc0) { //  or GBC-only game
+			PRINTF("GameBoy Color only");
 		}
 		else {
-			PRINTLN("Cartridge could be a ColorGameBoy game");
+			PRINTF("GameBoy");
 		}
+		PRINTLN(" game");
 
 		// Determine ROM size (need 4 memmap entries per bank)
 		rom_mm_size = 0;
@@ -226,7 +232,8 @@ public final class Cartridge {
 		if((MBC==2)&&(ram_mm_size==0)) ram_mm_size=1; // MBC2 has 512x4bits RAM builtin
 
 		title="";
-		for(int i=0; i<16; ++i) {
+		int title_len = ((B2I(MM_ROM[0][0x0143])) == 0) ? 16 : 15; // ROM names are shorter for CGB games
+		for(int i=0; i<title_len; ++i) {
 			if(B2I(MM_ROM[0][0x0134+i])==0) break;
 			title+=(char)B2I(MM_ROM[0][0x0134+i]);
 		}
