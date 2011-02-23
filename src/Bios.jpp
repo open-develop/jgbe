@@ -14,6 +14,10 @@ public class Bios {
 			location[0]=I2B(0xc3); // JP $0100
 			location[1]=I2B(0x00);
 			location[2]=I2B(0x01);
+			// TODO: Maybe we could try to intercept the current PC, and still
+			//       properly initialize all registers. This would help in the
+			//       case that the BIOS is disabled (swapped with the stub)
+			//       while it is executing.)
 		}
 	}
 
