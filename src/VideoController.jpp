@@ -721,8 +721,9 @@ public final class VideoController {
 					LCDCcntdwn += mode3duration; // Mode 3 lasts longer depending on the nr of sprites on the scanline
 					STAT = (STAT & 0xFC) | 3;
 					++STAT_statemachine_state;
-// 					if(!useSubscanlineRendering) renderScanLine(); //Test: What if the VC renders the BG internally in mode 2?
+// 					if(!useSubscanlineRendering) renderScanline(); //Test: What if the VC renders the BG internally in mode 2?
 					updatepatpix();
+
 					// Reset scanline rendering state, everything is rendered in mode 3
 					// FIXME/NOTE: The beginning of the scanline might already have to have been drawn here, since LCDCcntdwn<=0
 					pixpos = -(SCX&7); // First tile may be drawn partly off screen
@@ -731,9 +732,9 @@ public final class VideoController {
 					break;
 				case 1: // currently in mode 3, switch to mode 0
 					if(useSubscanlineRendering)
-						renderScanLinePart(); // Render (remainder of) background and sprites
+						renderScanlinePart(); // Render (remainder of) background and sprites
 					else
-						renderScanLine();
+						renderScanline();
 
 					LCDCcntdwn += (isCGB ? 376 : 372) - mode3duration; //mode 0 duration - mode 3 duration - hblank_dma
 					STAT &= 0xFC; //switch to mode 0: STAT = (STAT & 0x7C) | 0;
@@ -813,7 +814,7 @@ public final class VideoController {
 	static int cyclepos = 0;
 	static int[] zbuffer = new int[160];
 	static int curSprite = 0;
-	private static void renderScanLinePart() {
+	private static void renderScanlinePart() {
 		if((STAT_statemachine_state != 1)) return;
 		blitLine = blitImg[LY];
 		if((LCDC&0x80)==0) { // Draw empty scanline if LCD is disabled
@@ -1125,12 +1126,12 @@ public final class VideoController {
 				break;
 			case 0x02: // 0xff42 - SCY
 				if(useSubscanlineRendering)
-					renderScanLinePart();
+					renderScanlinePart();
 				SCY = value;
 				break;
 			case 0x03: // 0xff43 - SCX
 				if(useSubscanlineRendering)
-					renderScanLinePart();
+					renderScanlinePart();
 				SCX = value;
 				break;
 			case 0x04: // 0xff44 - LY
@@ -1166,7 +1167,7 @@ public final class VideoController {
 			case 0x08: // 0xff48 - OBP0 - Object Palette 0 Data (R/W) - Non CGB Mode Only
 			case 0x09: // 0xff49 - OBP1 - Object Palette 1 Data (R/W) - Non CGB Mode Only
 				if(useSubscanlineRendering)
-					renderScanLinePart();
+					renderScanlinePart();
 				CPU.IOP[index-0xff00] = value;
 				updateMonoColData(index-0xff47);
 				break;
@@ -1260,7 +1261,7 @@ public final class VideoController {
 
 #define DRAWPIX_S(x, pal, col) DRAWPIX(x, (pal << 2), col)
 
-	public static void renderScanLine() {
+	public static void renderScanline() {
 		/* FF40 - LCDC - LCD Control (R/W)
 		* Bit 7 - LCD Display Enable             (0=Off, 1=On)
 		* Bit 6 - Window Tile Map Display Select (0=9800-9BFF, 1=9C00-9FFF)
