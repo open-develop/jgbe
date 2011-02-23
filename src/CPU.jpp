@@ -553,8 +553,8 @@ public final class CPU {
 					BIOS_enabled = false;
 					//reset(false); // reset without forcing mono mode
 					refreshMemMap();
-					VC.isCGB = BIOS_enabled?false:isCGB();
-					A=VC.isCGB?0x11:0x01; // CGB sets this to 0x11 instead of 0x01 for GB
+					VC.isCGB = isCGB();
+					A = VC.isCGB?0x11:0x01; // CGB sets this to 0x11 instead of 0x01 for GB
 					b = read(index);
 				}
 				else {
