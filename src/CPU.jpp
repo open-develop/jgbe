@@ -1230,12 +1230,12 @@ public final class CPU {
 //#define break return cycles
 			switch ( op ) {
 				case 0x00: break;                                   // NOP
-				case 0xf3: IME=false; preCheckInts(); break;                        // DI
-				case 0xfb: IME=true; preCheckInts(); break;                         // IE
+				case 0xf3: IME=false; preCheckInts(); break;        // DI
+				case 0xfb: IME=true; preCheckInts(); break;         // IE
 				case 0xea: WRITE_V(IMM16, A); break;                // LD   (nn), A
 				case 0xfa: A = READ_V(IMM16); break;                // LD   A   , (nn)
-				case 0xe0: WRITE_S(IMM8a | 0xff00, A); break;        // LDH  (n) , A
-				case 0xf0: A = READ_S(IMM8a | 0xff00); break;        // LDH  A   , (n)
+				case 0xe0: WRITE_S(IMM8a | 0xff00, A); break;       // LDH  (n) , A
+				case 0xf0: A = READ_S(IMM8a | 0xff00); break;       // LDH  A   , (n)
 				case 0xe2: WRITE_S(C | 0xff00, A); break;           // LDH  (C) , A
 				case 0xf2: A = READ_S(C | 0xff00); break;           // LDH  A   , (C)
 				case 0xf9: SP = R16RHL; break;                      // LD   SP  , HL
@@ -1274,7 +1274,7 @@ public final class CPU {
 				case 0x74: WRITE_V(R16RHL, H); break;               // LD   (HL), H
 				case 0x75: WRITE_V(R16RHL, L); break;               // LD   (HL), L
 				case 0x77: WRITE_V(R16RHL, A); break;               // LD   (HL), A
-				case 0x36: WRITE_V(R16RHL, IMM8a); break;            // LD   (HL), n
+				case 0x36: WRITE_V(R16RHL, IMM8a); break;           // LD   (HL), n
 				case 0x76: {                                        // HALT
 					if (IME) {
 						halted = true;
@@ -1297,20 +1297,20 @@ public final class CPU {
 				case 0x19: DO_ADD_HL(D, E); break;                  // ADD  HL  , DE
 				case 0x29: DO_ADD_HL(H, L); break;                  // ADD  HL  , HL
 				case 0x39: DO_ADD_HL((SP>>8), (SP&0xff)); break;    // ADD  HL  , SP
-				case 0xe9: setPC(R16RHL); break;                      // JP   HL
+				case 0xe9: setPC(R16RHL); break;                    // JP   HL
 				case 0x2f: A ^= 0xff; F |= (FN|FH); break;          // CPL
 				case 0x07: DO_SHOP_R(RLC, A); F &= FC; break;       // RLCA
 				case 0x17: DO_SHOP_R(RL, A); F &= FC; break;        // RLA
 				case 0x0f: DO_SHOP_R(RRC, A); F &= FC; break;       // RRCA
 				case 0x1f: DO_SHOP_R(RR, A); F &= FC; break;        // RRA
-				case 0xc7: pushPC(); setPC(0x00); break;           // RST  &0
-				case 0xcf: pushPC(); setPC(0x08); break;           // RST  &8
-				case 0xd7: pushPC(); setPC(0x10); break;           // RST  &10
-				case 0xdf: pushPC(); setPC(0x18); break;           // RST  &18
-				case 0xe7: pushPC(); setPC(0x20); break;           // RST  &20
-				case 0xef: pushPC(); setPC(0x28); break;           // RST  &28
-				case 0xf7: pushPC(); setPC(0x30); break;           // RST  &30
-				case 0xff: pushPC(); setPC(0x38); break;           // RST  &38
+				case 0xc7: pushPC(); setPC(0x00); break;            // RST  &0
+				case 0xcf: pushPC(); setPC(0x08); break;            // RST  &8
+				case 0xd7: pushPC(); setPC(0x10); break;            // RST  &10
+				case 0xdf: pushPC(); setPC(0x18); break;            // RST  &18
+				case 0xe7: pushPC(); setPC(0x20); break;            // RST  &20
+				case 0xef: pushPC(); setPC(0x28); break;            // RST  &28
+				case 0xf7: pushPC(); setPC(0x30); break;            // RST  &30
+				case 0xff: pushPC(); setPC(0x38); break;            // RST  &38
 				case 0x37: F &= FZ; F |= FC; break;                 // SCF
 				case 0x3f: F &= (FZ|FC); F ^= FC; break;            // CCF
 				case 0x08: {                                        // LD   (nn), SP
