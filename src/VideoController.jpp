@@ -1486,25 +1486,6 @@ public final class VideoController {
 		}
 	}
 
-/*
-	private static int getSpriteCountOnScanline(int i) { //NOTE: Assume max sprites/scanline == 10
-		boolean spr8x16 = ((LCDC&(1<<2))!=0);
-		int count = 0;
-		for (int spr = 0; spr < 40; ++spr) {
-			int sprY    = OAM[(spr*4) + 0];
-			int sprX    = OAM[(spr*4) + 1];
-			int sprNum  = OAM[(spr*4) + 2];
-			int sprAttr = OAM[(spr*4) + 3];
-
-			int ofsY = i - sprY + 16;
-			//check if sprite is visible on this scanline
-			if ((ofsY >= 0) && (ofsY < (spr8x16 ? 16 : 8)) &&  (sprX > 0) && (sprX < 168))
-				++count;
-		}
-		return Math.min(count, 10);
-	}
-*/
-
 	private static void renderScanlineSprites() {
 		// NOTE: spritesOnScanline[] should be set by the render() by
 		//       calling setSpritesOnScanline() during mode 2/3.
