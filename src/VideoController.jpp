@@ -812,7 +812,7 @@ public final class VideoController {
 	// Render enough pixels for the ammount of time that has passed (from LCDCcntdwn to LCDCcntdwn + cycles).
 	static int pixpos = 0;
 	static int cyclepos = 0;
-	static int[] zbuffer = new int[160];
+	static int[] zbuffer = new int[160]; // see renderScanlineSprites
 	static int curSprite = 0;
 	private static void renderScanlinePart() {
 		if((STAT_statemachine_state != 1)) return;
@@ -904,8 +904,11 @@ public final class VideoController {
 			for(int curSprite = spriteCountOnScanline-1; curSprite>=0; --curSprite) { // Renders backwards for priorities in gb mono mode
 // 			for(int curSprite = 0; curSprite<spriteCountOnScanline; ++curSprite) {
 				if(!isCGB) {
-					// In GB-mono mode sprites are ordered according to X coordinate
-					// EG left-most on top of everything to it's right.
+					// In GB-mono mode sprites are ordered according to X coordinate,
+					// e.g. left-most sprite on top of everything to it's right.
+					// The exception is when two sprites have the same X coordinate,
+					// in which case the sprite with the lowest OAM address has
+					// priority.
 					int line = LY - (OAM[spritesOnScanline[curSprite]] - 16);
 					int xpos = OAM[spritesOnScanline[curSprite]|1]-8;
 					int tile = OAM[spritesOnScanline[curSprite]|2];
@@ -952,47 +955,58 @@ public final class VideoController {
 		}
 	}
 
-	static int spriteCountOnScanline; // How many sprites there are on this scanline
-	static int[] spritesOnScanline = new int[40]; // Index into OAM
+	static int spriteCountOnScanline; // How many sprites there are on the current scanline
+	static int[] spritesOnScanline = new int[40]; // Index into OAM, at most 10 sprites/scanline
 	private static int setSpritesOnScanline() {
 		int sprYSize = ((LCDC&(1<<2))!=0)?16:8;
 		int count = 0;
+		// NOTE: We store the sprites in OAM table order.
+		//       This is important for CGB priorities and DMG X-X collisions
 		for (int spr = 0; (spr < 40*4); spr+=4) { //NOTE: max sprites/scanline == 10
 			int sprPos = LY - (OAM[spr] - 16); // Relative position of sprite top to current scanline
 			//check if sprite is visible on this scanline (X position does not matter)
-			//fixme: spriteX>168 should not ++count as it does currently
+			//fixme: spriteX>168 should not ++count as it does currently.
+			//       May they should count since gbspec.txt mention this??
 			if((sprPos >= 0) && (sprPos < sprYSize )) {
 				spritesOnScanline[count] = spr;
 				++count;
 			}
 		}
 
-		// Next we sort the selected sprites on X position to make rendering easier (Bubblesort ftw)
-		for(int i=count-1; i>=0; --i) {
-			for(int j=i-1; j>=0; --j) {
-				int k = spritesOnScanline[i];
-				if(OAM[spritesOnScanline[j]|1]>OAM[k|1]) {
-					spritesOnScanline[i]=spritesOnScanline[j];
-					spritesOnScanline[j]=k;
+		// In GB-mono mode sprites are ordered according to X coordinate,
+		// e.g. left-most sprite displays on top of everything to it's right.
+		// In GB-color mode sprites are ordered according to their position
+		// in the OAM, e..g sprites with lower index on top of sprites with
+		// higher index.
+		// NOTE: This should be a stable sorting algorithm! (DMG sprite
+		//       priorities rely on the order in OAM ram for sprites with
+		//       equal X-coordinates.)
+		if(!isCGB) {
+			// Bubblesort ftw!
+			for(int i=count-1; i>=0; --i) {
+				for(int j=i-1; j>=0; --j) {
+					if(OAM[spritesOnScanline[j]|1] > OAM[spritesOnScanline[i]|1]) {
+						/* Swap with a triple XOR */
+						//spritesOnScanline[i] ^= spritesOnScanline[j];
+						//spritesOnScanline[j] ^= spritesOnScanline[i];
+						//spritesOnScanline[i] ^= spritesOnScanline[j];
+
+						// TODO: Which is faster?
+
+						/* Swap with a temporary */
+						int tmp = spritesOnScanline[i];
+						spritesOnScanline[i] = spritesOnScanline[j];
+						spritesOnScanline[j] = tmp;
+					}
 				}
 			}
 		}
 
-// 		for(int i=count-1; i>=0; --i) {
-// 			int k = spritesOnScanline[i];
-// 			spritesOnScanline[i] = spritesOnScanline[count-i-1];
-// 			spritesOnScanline[count-i-1] = k;
-// 		}
-// 		if(LY==120 ) {
-// 		for(int i=0; i<count; ++i) {
-// 			PRINTF("%03d:%03d  ", spritesOnScanline[i], OAM[spritesOnScanline[i]|1]);
-// 		}
-// 		if(count>0) PRINTLN("");
-// 		}
-
-
-		count = count>10?10:count;
-		spriteCountOnScanline=count;
+		// Actually this is more complex than this, the actual number of sprites
+		// displayed depends on how much of each sprite is present on each scan
+		// line with >10 sprites (did not find an exact description of how this
+		// works yet though)
+		spriteCountOnScanline = (count > 10) ? 10 : count;
 		return count;
 	}
 
@@ -1256,11 +1270,14 @@ public final class VideoController {
 	private static int bgTileX;
 	private static int bgOffsX;
 	private static int windX;
-	private static int tilebufBG[] = new int[0x200]; // ? max here could be lower?
+	private static int tilebufBG[] = new int[0x300]; // ? max here could be lower?
 	private static BLITPIXTYPE[] blitLine;
 
 #define DRAWPIX_S(x, pal, col) DRAWPIX(x, (pal << 2), col)
 
+	// NOTE: Renders one scanline. It is important to ensure that this is called
+	//       exactly once for each scanline (and no more!), or curBGY and
+	//       curWNDY will overflow.
 	public static void renderScanline() {
 		/* FF40 - LCDC - LCD Control (R/W)
 		* Bit 7 - LCD Display Enable             (0=Off, 1=On)
@@ -1282,12 +1299,6 @@ public final class VideoController {
 			TileData = ((LCDC&(1<<4))==0) ? 0x0800 : 0x0000;
 			BGTileMap = ((LCDC&(1<<3))==0) ? 0x1800 : 0x1c00;
 			WindowTileMap = ((LCDC&(1<<6))==0) ? 0x1800 : 0x1c00;
-
-			/* When Bit 0 is cleared, the background and window lose their priority - the sprites will be always
-			 * displayed on top of background and window, independently of the priority flags in OAM and BG Map
-			 * attributes.
-			 */
-			int BGPrio = (LCDC&(1<<0)); // ok dunno what exactly this does atm
 
 			windX = 160;
 			if(((LCDC&(1<<5))!=0)			 //window display enabled
@@ -1318,8 +1329,8 @@ public final class VideoController {
 		*/
 		int tileMap = BGTileMap + bgTileX + (bgTileY*32);
 		int attrMap = tileMap + 0x2000;
-		int bufMap = 0;
-		int cnt = ((windX+7) >> 3) + 1;
+		int bufMap  = 0;
+		int cnt     = ((windX+7) >> 3) + 1;
 
 		for (int i = 0; i < cnt; ++i) {
 			int tile = VRAM[tileMap++];
@@ -1332,6 +1343,15 @@ public final class VideoController {
 			 ((attr & 0x08) << 6) |              // bank select
 			 ((attr & 0x60) << 5);               // horiz/vert flip
 			tilebufBG[bufMap++] = ((attr&7) | 0x08) << 2; // pal select                   xpppcc
+			int priority = 1;
+			if(isCGB) {
+				// Either increase priority to 2, or drop it to 0
+				// attr.7 unset = use sprite prio bit, set = bg on top
+				// LCDC.0 unset = sprites always on top
+				priority += ((attr>>7)&1);
+				priority *= (LCDC&(1<<0));
+			}
+			tilebufBG[bufMap++] = priority;
 			if ((tileMap&31)==0) { //if ((attrMap&31)==0)
 				tileMap -= 32;
 				attrMap -= 32;
@@ -1354,26 +1374,36 @@ public final class VideoController {
 
 		calcBGTileBuf();
 
+		int tileMap   = BGTileMap + bgTileX + (bgTileY*32) + 0x2000;
 		int PatLine[] = patpix[tilebufBG[bufMap++]][bgOffsY];
-		int TilePal = tilebufBG[bufMap++];
-		int curX = 0;
+		int TilePal   = tilebufBG[bufMap++];
+		int priority  = tilebufBG[bufMap++];
+		int curX      = 0;
 
-		for (int t = bgOffsX; t < 8; ++t, --cnt)
+		for (int t = bgOffsX; t < 8; ++t, --cnt) {
+			zbuffer[curX] = (PatLine[t] == 0) ? 0 : priority;
 			DRAWPIX(curX++, TilePal, PatLine[t]);
+		}
 
 		if (cnt == 0) return;
 
 		while (cnt>=8) {
-			PatLine = patpix[tilebufBG[bufMap++]][bgOffsY];
-			TilePal = tilebufBG[bufMap++];
-			for (int t = 0; t < 8; ++t)
+			PatLine  = patpix[tilebufBG[bufMap++]][bgOffsY];
+			TilePal  = tilebufBG[bufMap++];
+			priority = tilebufBG[bufMap++];
+			for (int t = 0; t < 8; ++t) {
+				zbuffer[curX] = (PatLine[t] == 0) ? 0 : priority;
 				DRAWPIX(curX++, TilePal, PatLine[t]);
+			}
 			cnt -= 8;
 		}
-		PatLine = patpix[tilebufBG[bufMap++]][bgOffsY];
-		TilePal = tilebufBG[bufMap++];
-		for (int t = 0; cnt > 0; --cnt, ++t)
+		PatLine  = patpix[tilebufBG[bufMap++]][bgOffsY];
+		TilePal  = tilebufBG[bufMap++];
+		priority = tilebufBG[bufMap++];
+		for (int t = 0; cnt > 0; --cnt, ++t) {
+			zbuffer[curX] = (PatLine[t] == 0) ? 0 : priority;
 			DRAWPIX(curX++, TilePal, PatLine[t]);
+		}
 	}
 
 	private static void calcWindTileBuf() {
@@ -1394,6 +1424,15 @@ public final class VideoController {
 			 ((attr & 0x08) << 6) |              // bank select
 			 ((attr & 0x60) << 5);               // horiz/vert flip
 			tilebufBG[bufMap++] = ((attr&7) | 0x8) << 2; // pal select
+			int priority = 1;
+			if(isCGB) {
+				// Either increase priority to 2, or drop it to 0
+				// attr.7 unset = use sprite prio bit, set = bg on top
+				// LCDC.0 unset = sprites always on top
+				priority += ((attr>>7)&1);
+				priority *= (LCDC&(1<<0));
+			}
+			tilebufBG[bufMap++] = priority;
 			if ((tileMap&31)==0) { //if ((attrMap&31)==0)
 				tileMap -= 32;
 				attrMap -= 32;
@@ -1417,23 +1456,33 @@ public final class VideoController {
 
 		int PatLine[] = patpix[tilebufBG[bufMap++]][bgOffsY];
 		int TilePal = tilebufBG[bufMap++];
+		int priority  = tilebufBG[bufMap++];
 
-		for (int t = bgOffsX; (t < 8) && (cnt > 0); ++t, --cnt)
+		for (int t = bgOffsX; (t < 8) && (cnt > 0); ++t, --cnt) {
+			zbuffer[curX] = (PatLine[t] == 0) ? 0 : priority;
 			DRAWPIX(curX++, TilePal, PatLine[t]);
+		}
 
 		while (cnt>=8) {
 			PatLine = patpix[tilebufBG[bufMap++]][bgOffsY];
 			TilePal = tilebufBG[bufMap++];
-			for (int t = 0; t < 8; ++t)
+			priority = tilebufBG[bufMap++];
+			for (int t = 0; t < 8; ++t) {
+			zbuffer[curX] = (PatLine[t] == 0) ? 0 : priority;
 				DRAWPIX(curX++, TilePal, PatLine[t]);
+			}
 			cnt -= 8;
 		}
 		PatLine = patpix[tilebufBG[bufMap++]][bgOffsY];
 		TilePal = tilebufBG[bufMap++];
-		for (int t = 0; cnt > 0; --cnt, ++t)
+		priority = tilebufBG[bufMap++];
+		for (int t = 0; cnt > 0; --cnt, ++t)  {
+			zbuffer[curX] = (PatLine[t] == 0) ? 0 : priority;
 			DRAWPIX(curX++, TilePal, PatLine[t]);
+		}
 	}
 
+/*
 	private static int getSpriteCountOnScanline(int i) { //NOTE: Assume max sprites/scanline == 10
 		boolean spr8x16 = ((LCDC&(1<<2))!=0);
 		int count = 0;
@@ -1450,49 +1499,58 @@ public final class VideoController {
 		}
 		return Math.min(count, 10);
 	}
+*/
 
 	private static void renderScanlineSprites() {
+		// NOTE: spritesOnScanline[] should be set by the render() by
+		//       calling setSpritesOnScanline() during mode 2/3.
+		//       setSpritesOnScanline() ensures that the first 10 sprites
+		//       in spritesOnScanline[] are the selected sprites for display,
+		//       in order of increasing priority.
 		boolean spr8x16 = ((LCDC&(1<<2))!=0);
-
-		for (int spr = 0; spr < 40; ++spr) {
-			int sprY    = OAM[(spr*4) + 0];
-			int sprX    = OAM[(spr*4) + 1];
-			int sprNum  = OAM[(spr*4) + 2];
-			int sprAttr = OAM[(spr*4) + 3];
-
-			int ofsY = LY - sprY + 16;
-
-			//check if sprite is visible on this scanline
-			if ((ofsY >= 0) && (ofsY < (spr8x16 ? 16 : 8))
-			&&  (sprX > 0) && (sprX < 168)) {
-				if ((sprAttr&(1<<6))!=0) ofsY = (spr8x16 ? 15 : 7) - ofsY;  // vert  flip
-				if (spr8x16) {
-					sprNum &= ~1;
-					sprNum |= (ofsY >= 8) ? 1 : 0;
-					ofsY &= 7;
-				}
-
-				if ((sprAttr&(1<<5))!=0) sprNum |= (1<<10); // horiz flip
- 				//if ((sprAttr&(1<<6))!=0) sprNum |= (1<<11); // vert flip
-
-				int palnr;
-				if (isCGB) {
-					if ((sprAttr&(1<<3))!=0) sprNum |= (1<<9);  // bank select
-					palnr = sprAttr & 7;
-				} else
-					palnr = (sprAttr>>4)&1;
-
-				int[] PatLine = patpix[sprNum][ofsY];
-
-				for (int ofsX = 0; ofsX < 8; ++ofsX) {
-					int rx = sprX - 8 + ofsX;
-					// 0 is transparent color
-					int col = PatLine[ofsX];
-					if((col != 0) && (rx >= 0) && (rx < 160)
-					/*&& (prio || ((blitLine[rx]&0x3c)== 0x20))*/) {
-						DRAWPIX_S(rx, palnr, col);
-					}
-				}
+		for(int curSprite = spriteCountOnScanline - 1; curSprite>=0; curSprite--) {
+			int line = LY - (OAM[spritesOnScanline[curSprite]] - 16);
+			int xpos = OAM[spritesOnScanline[curSprite]|1]-8;
+			int tile = OAM[spritesOnScanline[curSprite]|2];
+			int attr = OAM[spritesOnScanline[curSprite]|3];
+			int priority = 1 - ((attr>>7)&1); // attr.7 unset = sprite is above BG and window
+			if((attr&(1<<6))!=0) // Sprite is flipped vertically
+				line = (spr8x16?15:7)-line;
+			if (spr8x16) {
+				// Select the correct tile depending on whether we need
+				// to render the upper or lower part of the sprite
+				tile &= ~1;
+				tile |= (line >= 8) ? 1 : 0;
+				line   &= 7;
+			}
+			if((attr&(1<<5))!=0) tile |= (1<<10); // Sprite is flipped horizontally
+			int pallette = ((attr>>4)&1) << 2;    // Selects between OBP0 or OBP1
+			if (isCGB) {
+				if((attr&(1<<3))!=0)
+					tile |= (1<<9);               // bank select
+				pallette = (attr & 7) << 2 ;
+			}
+			int[] patLine = patpix[tile][line];   // Fetch a line from the tile buffer
+			int from  = xpos < 0 ? 0 : xpos;
+			int pixel = (-xpos < 0) ? 0 : -xpos;
+			xpos     += 8;
+			int until = xpos > 160 ? 160 : xpos;
+			while(from < until) {
+				int color = patLine[pixel];
+				// NOTE: We probably also don't properly handle the situation
+				//       where two sprites with different priorities overlap.
+				//       E.g. when two sprites are on top, with one being above
+				//       the background and one below the background, the sprite
+				//       with lower priority 'takes on the colors of the
+				//       background'
+				if((color != 0) && (priority>=zbuffer[from]))
+					// Color 0 is always transparent
+					// zbuffer == 0 -> color 0, sprite goes on top
+					// zbuffer == 1 -> use sprite prio
+					// zbuffer == 2 -> bg has prio, sprites goes behind
+					DRAWPIX(from, pallette, color);
+				++from;
+				++pixel;
 			}
 		}
 	}
