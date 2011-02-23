@@ -721,20 +721,24 @@ public final class VideoController {
 					LCDCcntdwn += mode3duration; // Mode 3 lasts longer depending on the nr of sprites on the scanline
 					STAT = (STAT & 0xFC) | 3;
 					++STAT_statemachine_state;
-// 					if(!useSubscanlineRendering) renderScanline(); //Test: What if the VC renders the BG internally in mode 2?
-					updatepatpix();
+ 					if(!useSubscanlineRendering)
+						// Test: What if the VC renders the BG internally in mode 2?
+						// Result: (Currently?) works better for some games (e.g.
+						//          top line in Castellian doesn't blink)
+						renderScanline();
 
 					// Reset scanline rendering state, everything is rendered in mode 3
 					// FIXME/NOTE: The beginning of the scanline might already have to have been drawn here, since LCDCcntdwn<=0
 					pixpos = -(SCX&7); // First tile may be drawn partly off screen
 					cyclepos = 0;
 					curSprite = 0;
+					updatepatpix();
 					break;
 				case 1: // currently in mode 3, switch to mode 0
 					if(useSubscanlineRendering)
 						renderScanlinePart(); // Render (remainder of) background and sprites
-					else
-						renderScanline();
+					//else // rendering in mode2 is better
+						//renderScanline();
 
 					LCDCcntdwn += (isCGB ? 376 : 372) - mode3duration; //mode 0 duration - mode 3 duration - hblank_dma
 					STAT &= 0xFC; //switch to mode 0: STAT = (STAT & 0x7C) | 0;
