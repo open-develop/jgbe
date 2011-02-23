@@ -91,7 +91,21 @@ public final class CPU {
 			} else {
 				//PRINTLN("Failed cruise: " + newPC);
 				smallcruise[0] = I2B(read(newPC));
+				// We need to save & restore the state of the BIOS ROM, because
+				// we are doing a read-ahead here. Otherwise we end up disabling
+				// the BIOS one instruction too early, which causes most ROMs
+				// to enter an RST &38 loop when the BIOS is disabled while
+				// it is executing, instead of using the NOP trick (See Bios.jpp)
+				// to proceed to the game rom.
+				// If performance is an issue we could also connect a signal
+				// to the GUI telling it to disable the BIOS on/off control
+				// while the bios is running.
+				boolean b = BIOS_enabled;
 				smallcruise[1] = I2B(read((newPC+1)&0xffff));
+				if(b) {
+					rMemMap[0x0] = null;
+					BIOS_enabled = b;
+				}
 				decoderMemory = smallcruise;
 				decoderMaxCruise = 0; // still set to zero, to get memory reread as late as possible
 				globalPC = newPC;
