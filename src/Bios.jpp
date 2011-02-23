@@ -11,7 +11,7 @@ public class Bios {
 // 			PRINTLN("Bios could not be loaded (message: " + ioe.getMessage() + ").");
 // 			PRINTLN("Emulator will go on like nothing happened.");
 			PRINTLN("Using BIOS stub");
-			location[0]=I2B(0xc3);
+			location[0]=I2B(0xc3); // JP $0100
 			location[1]=I2B(0x00);
 			location[2]=I2B(0x01);
 		}
