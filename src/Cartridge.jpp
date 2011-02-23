@@ -334,7 +334,7 @@ public final class Cartridge {
 					else { // Select RAM
 						//not neccessary to take max(1, n) because there is only 1 slot where the rambanks may be mapped
 						CurrentRAMBank=value&0x03;
-						if (ram_mm_size == 0) {
+						if (ram_mm_size == 0 && ((value*64)|64) < rom_mm_size) {
 							PRINTLN("WARNING! 'Bomberman Collection (J) [S]' hack'"+value);
 							PRINTF("setting rom banks 0-15 to banks %d-%d\n", value*16, (value*16)+15);
 							for (int i = 0; i < 64; ++i)
