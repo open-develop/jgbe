@@ -413,6 +413,11 @@ public final class CPU {
 					compress = new GZIPOutputStream(dostream);
 					dostream = new DataOutputStream(compress);
 				}; break;
+				// LZ compression
+				case 2: {
+					compress = new LZOutputStream(dostream);
+					dostream = new DataOutputStream(compress);
+				}; break;
 #endif
 				default: ASSERT(false);
 			}
@@ -454,6 +459,8 @@ public final class CPU {
 #ifndef USE_JAVA_MOBILE
 				// GZIP compression
 				case 1: distream = new DataInputStream(new GZIPInputStream(distream)); break;
+				// LZ compression
+				case 2: distream = new DataInputStream(new LZInputStream(distream)); break;
 #endif
 				default: throw new IOException("unknown compression method:"+compressionmethod);
 			}

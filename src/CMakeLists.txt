@@ -57,6 +57,9 @@ ADD_JAVA_JAR(jgbe
 	RDParser.jpp
 	Debugger.jpp
 	Disassembler.jpp
+	
+	LZInputStream.jpp
+	LZOutputStream.jpp
 
 	icon.gif jgbe_logo.png VeraMono.ttf
 	
