@@ -110,11 +110,11 @@ import java.io.*;
 
 #define SL_GETSET(type, var, getter, setter) {\
 	if (SL_SAVE) { \
-	  SL_TYPE_ ## type sl_v = var.getter(); \
-	  SL_ ## type (sl_v); \
+		SL_TYPE_ ## type sl_v = var.getter(); \
+		SL_ ## type (sl_v); \
 	} else { \
 		SL_TYPE_ ## type sl_v = SL_TYPE_INIT_ ## type; \
-	  SL_ ## type (sl_v); \
+		SL_ ## type (sl_v); \
 		var.setter(sl_v); \
 	} \
 }

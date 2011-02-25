@@ -203,8 +203,6 @@ public final class VideoController {
 		SL_ARR(UINT8, VRAM, 0x4000);
 		SL_ARR(UINT8, OAM, 0xa0);
 
-		//SL_BOOL(isCGB); should be correct already
-
 		SL_UINT8(LY);
 		SL_UINT8(LYC);
 		SL_UINT8(SCX);

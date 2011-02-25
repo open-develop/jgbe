@@ -124,7 +124,7 @@ public final class CPU {
 		public static void slowPushPC() {
 			//PRINTLN("SLOW PUSH: "+ SP);
 			int pc = globalPC + localPC;
-			--SP; SP &= 0xffff;write(SP, pc >> 8);
+			--SP; SP &= 0xffff; write(SP, pc >> 8);
 			--SP; SP &= 0xffff; write(SP, pc&0xff);
 		}
 
@@ -240,8 +240,8 @@ public final class CPU {
 		static SAVELOAD_FUNCTION {
 			SL_IF_VERSION( 0,  9) first_save_string = "unknown";
 			SL_IF_VERSION( 0,  9) last_save_string = "unknown";
-			SL_IF_VERSION(10, -1) SL_STRING(first_save_string);
 			if (SL_SAVE) last_save_string = Version.str;
+			SL_IF_VERSION(10, -1) SL_STRING(first_save_string);
 			SL_IF_VERSION(10, -1) SL_STRING(last_save_string);
 
 			SL_IF_VERSION( 1, -1) {
@@ -437,8 +437,7 @@ public final class CPU {
 				C = (magix >> 16) & 0xff;
 				D = (magix >>  8) & 0xff;
 				E = (magix >>  0) & 0xff;
-			}
-			else
+			} else
 				loadversion = distream.readInt();
 			if (loadversion < SL_LOAD_MIN_VERSION)
 				throw new IOException("save state too old");
@@ -1217,7 +1216,7 @@ public final class CPU {
 		}
 
 		public static int execute() {
-			int op, imm8a, imm8b;
+			int op;
 			int cycles;
 			TVARS;
 
