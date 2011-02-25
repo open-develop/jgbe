@@ -303,8 +303,8 @@ public final class CPU {
 
 			SL_IF_VERSION( 3, 13) SL_SKIP(UINT8, 1); // vcmode
 
-			SL_IF_VERSION( 0,  8) SL_INT(TotalInstrCount);
-			SL_IF_VERSION( 0,  8) SL_INT(TotalCycleCount);
+			SL_IF_VERSION( 3,  8) SL_INT(TotalInstrCount);
+			SL_IF_VERSION( 3,  8) SL_INT(TotalCycleCount);
 			SL_IF_VERSION( 9, -1) SL_LONG(TotalInstrCount);
 			SL_IF_VERSION( 9, -1) SL_LONG(TotalCycleCount);
 
@@ -337,6 +337,10 @@ public final class CPU {
 				calcCyclesPerTIMA();
 				NextEventCycleCount = 0;
 				VCRenderEventCycleCount = 0;
+				SL_IF_VERSION( -1,  2) {
+					TotalInstrCount = 0;
+					TotalCycleCount = 0;
+				}
 				SL_IF_VERSION( -1, 18) {
 					// fix divReset for old savegames
 					divReset = (TotalCycleCount + CYCLES_PER_DIV - 1) - (IOP[0x04]*CYCLES_PER_DIV);
