@@ -396,12 +396,13 @@ public final class CPU {
 			int saveversion = SL_SAVE_VERSION; //change when changing savestate format
 			dostream.writeInt(SL_MAGIX);
 			dostream.writeInt(saveversion);
+
+			OutputStream compress = null; 
+			int compressionmethod = 0; // no compression
 #ifndef USE_JAVA_MOBILE
-			int compressionmethod = 1; // GZIP compression
-			DeflaterOutputStream zostream = null;
-#else
-			int	compressionmethod = 0; // no compression
+			compressionmethod = 1; // GZIP compression
 #endif
+
 			dostream.writeInt(compressionmethod);
 			switch (compressionmethod) {
 				// no compression
@@ -409,19 +410,17 @@ public final class CPU {
 #ifndef USE_JAVA_MOBILE
 				// GZIP compression
 				case 1: {
-					zostream = new GZIPOutputStream(dostream);
-					dostream = new DataOutputStream(zostream);
+					compress = new GZIPOutputStream(dostream);
+					dostream = new DataOutputStream(compress);
 				}; break;
 #endif
 				default: ASSERT(false);
 			}
 			stateSaveLoad(true, saveversion, dostream, null);
-#ifndef USE_JAVA_MOBILE
-			if (zostream != null) {
-				dostream.flush();
-				zostream.finish();
-			}
-#endif
+
+			dostream.flush();			
+			// if there was a compressor, close it so it finishes its output
+			if (compress != null) compress.close();
 		}
 
 		public static void loadState(DataInputStream distream)
