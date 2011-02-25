@@ -257,9 +257,32 @@ public final class CPU {
 			SL_ARR(UINT8, IOP, 0x80);
 			SL_ARR(UINT8B, HRAM, 0x7f);
 			SL_IF_VERSION( 0,  0) {
-				for (int i = 0; i < 8; ++i) {
+				boolean doskip = false;
+				int skipsize = 0x10000 - 0x1000;
+				
+				SL_ARR(UINT8B, WRAM[0], 0x1000);
+				if (SL_LOAD) {
+					// some version 0 savegames have too much WRAM data, and some don't
+					// try reading 0x8000 bytes, for savegames with too much data, these will all be zero
+					// for other savegames, those are highly unlikely/impossible to be all zero
+					int trysize = 0x8000;
+					byte[] buffer = new byte[trysize];
+					int len = distream.read(buffer, 0, trysize);
+					if (len == trysize) {
+						doskip = true;
+						for (int i = 0; i < trysize; ++i)
+							if (buffer[i] != 0)
+								doskip = false;
+					}
+					if (!doskip)
+						distream = new DataInputStream(new SequenceInputStream(new ByteArrayInputStream(buffer), distream));
+					else
+						SL_SKIP(UINT8B, skipsize-trysize);
+				}
+
+				for (int i = 1; i < 8; ++i) {
 					SL_ARR(UINT8B, WRAM[i], 0x1000);
-					//SL_SKIP(UINT8, 0x10000 - 0x1000);
+					if (doskip) SL_SKIP(UINT8B, skipsize);
 				}
 			}
 			SL_IF_VERSION( 1, -1) SL_ARR_2D(UINT8B, WRAM, 0x08, 0x1000);
