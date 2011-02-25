@@ -235,7 +235,7 @@ public class VFSRecStore implements IVFSNode {
 		if (name.endsWith("/"))
 			deleteFileRecord(delrid);
 		else
-			deleteDirRecord(delrid);
+			deleteDirRecord(delrid, name);
 	}
 
 	private void deleteFileRecord(int delrid)
@@ -251,9 +251,20 @@ public class VFSRecStore implements IVFSNode {
 		}
 	}
 
-	private void deleteDirRecord(int delrid)
+	private void deleteDirRecord(int delrid, String name)
 	{
-		PRINTLN("TODO: delete dir id="+delrid);
+		try {
+			VFSRecStore node = new VFSRecStore(name, recstore, delrid);
+			Vector dirlist = node.getDirList();
+			for (int i = 0; i+1 < dirlist.size(); i += 2) {
+				String nname = (String)dirlist.elementAt(i+1);
+				int id = ((Integer)dirlist.elementAt(i)).intValue();
+				deleteRecord(id, nname);
+			}
+			recstore.deleteRecord(delrid);
+		} catch (Throwable e) {
+			PRINTLN("Failed to unlink: " + delrid + " - " + e.toString());
+		}
 	}
 
 	/* initialises from the recordstores identified by rsname/pubname/appname */
@@ -357,12 +368,15 @@ public class VFSRecStore implements IVFSNode {
 
 	public IVFSNode createFile(String name)
 	{
+		if (!isDir()) return null;
 		try {
 			Enumeration e = getChildren();
 			while (e.hasMoreElements()) {
 				IVFSNode node = (IVFSNode)e.nextElement();
+				if (node.getName().equals(name+"/") || name.equals(node.getName()+"/"))
+					return null; // already exists with invalid type
 				if (node.getName().equals(name))
-					return node;
+					return null; // already exists
 			}
 
 			int nid = recstore.addRecord(new byte[0], 0, 0);
