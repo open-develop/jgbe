@@ -21,6 +21,7 @@ SET(CUSTOM_JAVA_PATHS
 	"/cygdrive/c/Program Files/Java/WTK25/bin/"
 	"/cygdrive/d/Program Files/Java/WTK25/bin/"
 
+	"${CMAKE_SOURCE_DIR}/.."
 	"${CMAKE_SOURCE_DIR}"
 )
 FIND_PACKAGE(CustomJava)
