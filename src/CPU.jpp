@@ -275,7 +275,7 @@ public final class CPU {
 								doskip = false;
 					}
 					if (!doskip)
-						distream = new DataInputStream(new SequenceInputStream(new ByteArrayInputStream(buffer), distream));
+						distream = new DataInputStream(new MSequenceInputStream(new ByteArrayInputStream(buffer), distream));
 					else
 						SL_SKIP(UINT8B, skipsize-trysize);
 				}

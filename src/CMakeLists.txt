@@ -26,6 +26,7 @@ SET(JGBE_CORE_SOURCES
 	ShTablesSRL.jpp
 	IAudioListener.jpp
 	AudioController.jpp
+	MSequenceInputStream.jpp
 )
 
 #shared between jmgbe/meboy
