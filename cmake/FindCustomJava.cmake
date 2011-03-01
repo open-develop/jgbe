@@ -333,7 +333,7 @@ FILE(APPEND jadfile.out.temp \"MIDlet-Jar-Size: \${_size}\\r\\n\")
 			DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${jarname}.jar-dir/${jarprev}"
 			WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${jarname}.jar-dir/"
 			COMMAND "${CMAKE_COMMAND}" ARGS -E copy "${jarprev}" "temp.jar"
-			COMMAND "${JAVA_CMD_PREVERIFY}" ARGS -d . -target CLDC1.1 -classpath ${JAVA_CLASSPATHV} temp.jar
+			COMMAND "${JAVA_CMD_PREVERIFY}" ARGS -d . -target CLDC1.1 -classpath ${JAVA_CLASSPATHW} temp.jar
 			COMMAND "${CMAKE_COMMAND}" ARGS -E copy "temp.jar" "${jarnext}"
 		)
 	ENDIF()
