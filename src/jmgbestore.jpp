@@ -15,10 +15,12 @@ public class jmgbestore extends MIDlet {
 	RecordStore rs_data;
 	int data_id;
 
-	public jmgbestore() {
+	public jmgbestore()
+	{
 	}
 
-	public void startApp() {
+	public void startApp()
+	{
 		form = new Form("Hello World");
 		Display display = Display.getDisplay(this);
 		display.setCurrent(form);
@@ -32,7 +34,7 @@ public class jmgbestore extends MIDlet {
 			form.append("Exception: " + e.getMessage());
 		}
 	}
-	
+
 	public void initialize() throws Throwable
 	{
 		RecordStore rs_root = RecordStore.openRecordStore("jmgbe-store-root", true, RecordStore.AUTHMODE_ANY, true);
@@ -42,17 +44,17 @@ public class jmgbestore extends MIDlet {
 		RecordEnumeration enum_root = rs_root.enumerateRecords( null, null, false );
 		data_id = -1;
 		try {
-		    while( enum_root.hasNextElement() ){
-			int id = enum_root.nextRecordId();
-			byte[] data = rs_root.getRecord( id );
-			DataInputStream dis = new DataInputStream(new ByteArrayInputStream( data ));
-			data_id = dis.readInt();
-			form.append("Got root data id:" + data_id + "\n");
-		    }
+			while (enum_root.hasNextElement()) {
+				int id = enum_root.nextRecordId();
+				byte[] data = rs_root.getRecord( id );
+				DataInputStream dis = new DataInputStream(new ByteArrayInputStream( data ));
+				data_id = dis.readInt();
+				form.append("Got root data id:" + data_id + "\n");
+			}
 		} finally {
 			enum_root.destroy(); // always clean it up!
 		}
-		
+
 		if (data_id == -1) {
 			byte[] newroot = new byte[0];
 			data_id = rs_data.addRecord(newroot, 0, newroot.length);
@@ -65,10 +67,12 @@ public class jmgbestore extends MIDlet {
 		}
 	}
 
-	public void pauseApp() {
+	public void pauseApp()
+	{
 	}
 
-	public void destroyApp(boolean unconditional) {
+	public void destroyApp(boolean unconditional)
+	{
 	}
 }
 #endif
