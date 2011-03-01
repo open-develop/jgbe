@@ -56,11 +56,11 @@ public class jmgbestore extends MIDlet {
 		if (data_id == -1) {
 			byte[] newroot = new byte[0];
 			data_id = rs_data.addRecord(newroot, 0, newroot.length);
-			DirectByteArrayOutputStream bo = new DirectByteArrayOutputStream();
+			ByteArrayOutputStream bo = new ByteArrayOutputStream();
 			DataOutputStream dos = new DataOutputStream(bo);
 			dos.writeInt(data_id);
 			dos.flush();
-			rs_root.addRecord(bo.getByteArray(), 0, bo.size());
+			rs_root.addRecord(bo.toByteArray(), 0, bo.size());
 			form.append("Added new root data id:" + data_id + "\n");
 		}
 	}

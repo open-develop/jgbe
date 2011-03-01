@@ -89,13 +89,13 @@ public class VFSRoot implements IVFSNode {
 			root.addNode(new VFS_JSR75("filesystem/", "/"));
 		} catch (Throwable e) { PRINTLN(e.getMessage()); }
 		try {
-			root.addNode(new VFSRecStore("Record-JMGBE-Store", "jmgbe-store", "Da Fox && HackyKid && Satan", "JMGBE-Store"));
-		} catch (Throwable e) { PRINTLN(e.getMessage()); }
-		try {
-			root.addNode(new VFSRecStore("Record-JMGBE", "jmgbe-store", "Da Fox && HackyKid && Satan", "Java Mobile GameBoy Emulator"));
-		} catch (Throwable e) { PRINTLN(e.getMessage()); }
-		try {
 			root.addNode(new VFSRecStore("Record-JMGBE-Local", "jmgbe-store"));
+		} catch (Throwable e) { PRINTLN(e.getMessage()); }
+		try {
+			root.addNode(new VFSRecStore("Record-JMGBE", "jmgbe-store", "Vendor", "JMGBE"));
+		} catch (Throwable e) { PRINTLN(e.getMessage()); }
+		try {
+			root.addNode(new VFSRecStore("Record-JMGBE-Store", "jmgbe-store", "Vendor", "JMGBE-Store"));
 		} catch (Throwable e) { PRINTLN(e.getMessage()); }
 #endif
 		return root;
