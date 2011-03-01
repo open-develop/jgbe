@@ -222,7 +222,6 @@ class LZOutputStream extends OutputStream {
 			hashhead = null;
 			hashprev = null;
 		}
-		outstr.close();
 	}
 
 	protected void finalize() throws Throwable

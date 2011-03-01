@@ -79,7 +79,6 @@ class LZInputStream extends InputStream {
 		if (inbuf != null) {
 			inbuf = null;
 		}
-		instr.close();
 	}
 
 	protected void finalize() throws Throwable
