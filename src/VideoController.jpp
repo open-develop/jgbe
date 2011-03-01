@@ -719,18 +719,19 @@ public final class VideoController {
 					LCDCcntdwn += mode3duration; // Mode 3 lasts longer depending on the nr of sprites on the scanline
 					STAT = (STAT & 0xFC) | 3;
 					++STAT_statemachine_state;
- 					if(!useSubscanlineRendering)
+ 					if (!useSubscanlineRendering) {
 						// Test: What if the VC renders the BG internally in mode 2?
 						// Result: (Currently?) works better for some games (e.g.
 						//          top line in Castellian doesn't blink)
 						renderScanline();
-
-					// Reset scanline rendering state, everything is rendered in mode 3
-					// FIXME/NOTE: The beginning of the scanline might already have to have been drawn here, since LCDCcntdwn<=0
-					pixpos = -(SCX&7); // First tile may be drawn partly off screen
-					cyclepos = 0;
-					curSprite = 0;
-					updatepatpix();
+					} else {
+						// Reset scanline rendering state, everything is rendered in mode 3
+						// FIXME/NOTE: The beginning of the scanline might already have to have been drawn here, since LCDCcntdwn<=0
+						pixpos = -(SCX&7); // First tile may be drawn partly off screen
+						cyclepos = 0;
+						curSprite = 0;
+						updatepatpix();
+					}
 					break;
 				case 1: // currently in mode 3, switch to mode 0
 					if(useSubscanlineRendering)
@@ -1491,47 +1492,61 @@ public final class VideoController {
 		//       in spritesOnScanline[] are the selected sprites for display,
 		//       in order of increasing priority.
 		boolean spr8x16 = ((LCDC&(1<<2))!=0);
-		for(int curSprite = spriteCountOnScanline - 1; curSprite>=0; curSprite--) {
-			int line = LY - (OAM[spritesOnScanline[curSprite]] - 16);
-			int xpos = OAM[spritesOnScanline[curSprite]|1]-8;
-			int tile = OAM[spritesOnScanline[curSprite]|2];
-			int attr = OAM[spritesOnScanline[curSprite]|3];
+		// loop starts with highest priority sprite
+		for (int spr = 0; spr < spriteCountOnScanline; ++spr) {
+			int line = LY - OAM[spritesOnScanline[spr]] + 16;
+			int xpos = OAM[spritesOnScanline[spr]|1]-8;
+			int tile = OAM[spritesOnScanline[spr]|2];
+			int attr = OAM[spritesOnScanline[spr]|3];
 			int priority = 1 - ((attr>>7)&1); // attr.7 unset = sprite is above BG and window
-			if((attr&(1<<6))!=0) // Sprite is flipped vertically
-				line = (spr8x16?15:7)-line;
+
+			int from  = xpos < 0 ? 0 : xpos;
+			int pixel = from - xpos;
+			int until = xpos > 160-8 ? 160 : xpos+8;
+			
+			if (from >= until)
+				continue;
+
+			if ((attr&(1<<6))!=0) // Sprite is flipped vertically
+				line = (spr8x16 ? 15 : 7) - line;
 			if (spr8x16) {
 				// Select the correct tile depending on whether we need
 				// to render the upper or lower part of the sprite
 				tile &= ~1;
 				tile |= (line >= 8) ? 1 : 0;
-				line   &= 7;
+				line &= 7;
 			}
-			if((attr&(1<<5))!=0) tile |= (1<<10); // Sprite is flipped horizontally
-			int pallette = ((attr>>4)&1) << 2;    // Selects between OBP0 or OBP1
+
+			if ((attr&(1<<5))!=0) // Sprite is flipped horizontally
+				tile |= (1<<10);
+
+			int pallette;
 			if (isCGB) {
-				if((attr&(1<<3))!=0)
-					tile |= (1<<9);               // bank select
+				if ((attr&(1<<3))!=0) // bank select
+					tile |= (1<<9);               
 				pallette = (attr & 7) << 2 ;
-			}
-			int[] patLine = patpix[tile][line];   // Fetch a line from the tile buffer
-			int from  = xpos < 0 ? 0 : xpos;
-			int pixel = (-xpos < 0) ? 0 : -xpos;
-			xpos     += 8;
-			int until = xpos > 160 ? 160 : xpos;
-			while(from < until) {
+			} else
+				pallette = ((attr>>4)&1) << 2; // Selects between OBP0 or OBP1
+
+			int[] patLine = patpix[tile][line]; // Fetch a line from the tile buffer
+			
+			while (from < until) {
 				int color = patLine[pixel];
-				// NOTE: We probably also don't properly handle the situation
-				//       where two sprites with different priorities overlap.
-				//       E.g. when two sprites are on top, with one being above
-				//       the background and one below the background, the sprite
-				//       with lower priority 'takes on the colors of the
-				//       background'
-				if((color != 0) && (priority>=zbuffer[from]))
+				if (color != 0) {
 					// Color 0 is always transparent
 					// zbuffer == 0 -> color 0, sprite goes on top
 					// zbuffer == 1 -> use sprite prio
 					// zbuffer == 2 -> bg has prio, sprites goes behind
-					DRAWPIX(from, pallette, color);
+					// zbuffer == 3 -> sprite with higher priority has drawn this pixel
+					if (priority >= zbuffer[from])
+						DRAWPIX(from, pallette, color);
+
+					// Even if we didn't draw a pixel because of bg priority
+					// we still mark the zbuffer as if we did, this will make
+					// high priority sprites below the bg override appear to
+					// 'takes on the colors of the background'
+					zbuffer[from] = 3;
+				}
 				++from;
 				++pixel;
 			}
