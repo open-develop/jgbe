@@ -223,7 +223,7 @@ jademu: jmgbe.emu
 $(BUILDDIR)/%.o: $(ROMSRCDIR)/%.asm
 	@echo "[assembling] $*"
 	@mkdir -p $(BUILDDIR)
-	@$(GB_ASM) -i$(ROMSRCDIR)/ -o$@ $< > $(BUILDDIR)/%.o.out && rm $(BUILDDIR)/%.o.out || cat $(BUILDDIR)/%.o.out
+	@$(GB_ASM) -i$(ROMSRCDIR)/ -o$@ $< > $(BUILDDIR)/$*.o.out || (cat $(BUILDDIR)/$*.o.out ; false)
 	@rm -f $(BUILDDIR)/$*.link
 
 $(BUILDDIR)/%.link:
