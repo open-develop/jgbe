@@ -49,6 +49,7 @@ FIND_PROGRAM(JAVA_CMD_ZIP NAMES zip)
 FIND_PROGRAM(JAVA_CMD_GCC NAMES gcc)
 FIND_PROGRAM(JAVA_CMD_SED NAMES sed)
 FIND_PROGRAM(JAVA_CMD_JAVA NAMES java)
+FIND_PROGRAM(JAVA_CMD_JARSIGNER NAMES jarsigner PATHS ${CUSTOM_JAVA_PATHS})
 FIND_PROGRAM(JAVA_CMD_PREVERIFY NAMES preverify PATHS ${CUSTOM_JAVA_PATHS})
 FIND_PROGRAM(JAVA_CMD_EMULATOR NAMES emulator PATHS ${CUSTOM_JAVA_PATHS})
 
@@ -102,7 +103,7 @@ MACRO(ADD_JAVA_JAR jarname)
 	SET(AJJ_jarname "${jarname}")
 	SET(AJJ_result)
 	PARSE_ARGUMENTS(AJJ
-		"MAINCLASS;NAME;CLASSPATH;OFILEPATH;DEPENDS;INCLUDE_DIRECTORIES;DEFINES;SOURCEVER;TARGETVER"
+		"MAINCLASS;NAME;CLASSPATH;OFILEPATH;DEPENDS;INCLUDE_DIRECTORIES;DEFINES;SOURCEVER;TARGETVER;SIGN;SIGNKEYPASS;SIGNSTOREPASS;SIGNALIAS"
 		"VERIFY;OBFUSCATE;ZIPOPTIMIZE"
 		"${ARGN}"
 	)
@@ -306,7 +307,7 @@ FILE(APPEND jadfile.out.temp \"MIDlet-Jar-Size: \${_size}\\r\\n\")
 	ENDIF()
 	IF (AJJ_OBFUSCATE)
 		SET(RUN_PROGUARD TRUE)
-		SET(PROGUARD_ARGS_OBFUSCATE -keep "public class ${AJJ_MAINCLASS}" -optimizationpasses 3 -allowaccessmodification -mergeinterfacesaggressively -overloadaggressively)
+		SET(PROGUARD_ARGS_OBFUSCATE -keep "public class ${AJJ_MAINCLASS} { public static void main(java.lang.String[])\; }" -optimizationpasses 3 -allowaccessmodification -mergeinterfacesaggressively -overloadaggressively)
 	ENDIF()
 
 	IF(RUN_PROGUARD)
@@ -338,6 +339,21 @@ FILE(APPEND jadfile.out.temp \"MIDlet-Jar-Size: \${_size}\\r\\n\")
 		)
 	ENDIF()
 
+	IF (AJJ_SIGN)
+		IF(CYGWIN)
+			execute_process(COMMAND "${JAVA_CMD_CYGPATH}" -ws "${AJJ_SIGN}" OUTPUT_VARIABLE AJJ_SIGN OUTPUT_STRIP_TRAILING_WHITESPACE)
+		ENDIF()
+		SET(jarprev "${jarnext}")
+		SET(jarnext "${jarname}.signed.jar")
+
+		add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${jarname}.jar-dir/${jarnext}"
+			VERBATIM
+			DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${jarname}.jar-dir/${jarprev}"
+			WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${jarname}.jar-dir/"
+			COMMAND "${JAVA_CMD_JARSIGNER}" ARGS -keystore "${AJJ_SIGN}" -storepass "${AJJ_SIGNSTOREPASS}" -keypass "${AJJ_SIGNKEYPASS}" -signedjar "${jarnext}" "${jarprev}" "${AJJ_SIGNALIAS}"
+		)
+	ENDIF()
+
 	IF (AJJ_ZIPOPTIMIZE)
 		SET(jarprev "${jarnext}")
 		SET(jarnext "${jarname}.zipopt.jar")
@@ -348,9 +364,6 @@ FILE(APPEND jadfile.out.temp \"MIDlet-Jar-Size: \${_size}\\r\\n\")
 			WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${jarname}.jar-dir/"
 			COMMAND "${JAVA_CMD_ZIPOPT}" ARGS "${jarprev}" "${jarnext}"
 		)
-	ENDIF()
-
-	IF (AJJ_SIGN)
 	ENDIF()
 
 	add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${jarname}.jar"
