@@ -79,8 +79,6 @@ public final class VideoController {
 	private static boolean anydirty = true;                // see updatepatpix()
 // 	private boolean alldirty = true;                // see updatepatpix()
 
-	private CPU cpu; // dont think we need this... //yes we do, we need interrupts
-
 	private long pfreq;
 	private long ptick;
 	private long ftick;
@@ -189,7 +187,6 @@ public final class VideoController {
 	}
 
 	public VideoController(CPU cpu, int image_width, int image_height) {
-		this.cpu = cpu;
 #ifndef USE_JAVA_MOBILE
 		drawImg=new Image[2];
 #endif
