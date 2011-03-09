@@ -1087,17 +1087,17 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			else if(e.getSource().equals( menuitemSaveState )) {
 				if (!CPU.canRun()) return;
 				pauseEmulation(false);
-				addOSDLine("Saving State "+selectedState);
 				try {
 					String stname = FHandler.JGBEDir("savestates");
 					stname += curcartname + ".st" + selectedState;
 					DataOutputStream dostream = FHandler.getDataOutputStream(stname);
 					CPU.saveState(dostream);
 					dostream.close();
+					addOSDLine("Saved state "+selectedState);
 				}
 				catch (java.io.IOException ioe) {
-					PRINTLN("Error saving state! ");
-					PRINTLN(ioe.getMessage());
+					addOSDLine("Failed to save state "+selectedState);
+					PRINTLN("Save Failed:" + ioe.getMessage());
 				};
 				menuitemSpeedRunRecord.setState(cpu.keyHistoryEnabled);
 				menuitemSpeedRunPlay.setState(cpu.playbackHistoryIndex != -1);
@@ -1115,6 +1115,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 				}
 				catch (java.io.IOException ioe) {
 					addOSDLine("Failed to load state "+selectedState);
+					PRINTLN("Load Failed:" + ioe.getMessage());
 				};
 				resumeEmulation(false);
 				if(cpu.keyHistoryEnabled) addOSDLine("Note: Speedrun in progress");
