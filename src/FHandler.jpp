@@ -3,6 +3,8 @@ import java.io.*;
 #ifndef USE_JAVA_MOBILE
 import java.util.zip.*;
 import java.awt.Font;
+import java.net.URL;
+import java.net.URLConnection;
 #endif
 
 public final class FHandler {
@@ -60,9 +62,28 @@ public final class FHandler {
 #endif
 		return path;
 	}
+	
+	public static InputStream getInputStream(String fname) throws IOException {
+		String error = "";
+		try {
+			return new FileInputStream(fname);
+		} catch (Exception e) {
+			error = error + e.toString() + '\n';
+		};
+		try {
+			URL url = new URL(fname);
+			URLConnection urlc = url.openConnection();
+			return urlc.getInputStream();
+		} catch (Exception e) {
+			error = error + e.toString() + '\n';
+		};
+		throw new IOException(error);
+	}
 
 	public static DataInputStream getDataInputStream(String fname) throws IOException {
 #ifndef USE_JAVA_MOBILE
+		InputStream instr = getInputStream(fname);
+
 		int dotPos=0;
 		int dp = fname.indexOf(".");
 		while(dp>=0) { //NOTE: Java 1.4.2 does not have 'lastIndexOf'
@@ -71,19 +92,12 @@ public final class FHandler {
 		}
 		String fext = fname.substring(dotPos);
 		if ( !fext.equals(".zip") ) {
-			// plain files
-			//PRINTLN("NonStatic.class.getDataInputStream("+fname+");");
-			//Class clazz = Runtime.getRuntime().getClass();
-			InputStream bistream =  new FileInputStream(fname);
-// 			PRINTLN("bistream="+bistream);
-			DataInputStream distream = new DataInputStream(bistream);
-// 			PRINTLN("distream="+distream);
+			DataInputStream distream = new DataInputStream(instr);
 			return distream;
 		}
 		else {
 			// Open the ZIP file
-			FileInputStream fistream = new FileInputStream(fname);
-			ZipInputStream zistream = new ZipInputStream(fistream);
+			ZipInputStream zistream = new ZipInputStream(instr);
 
 			// Get the first entry
 			ZipEntry entry = zistream.getNextEntry();

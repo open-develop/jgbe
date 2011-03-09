@@ -295,11 +295,14 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		protected ColorSelector cs;
 
 		public void updateCartName(String fname) {
-			int slashPos = fname.lastIndexOf(File.separator);
+			int sepPos = fname.lastIndexOf(File.separator);
+			int slashPos = fname.lastIndexOf('/'); // For urls on windows
+			if (sepPos > slashPos) slashPos = sepPos;
+
 			int dotPos = fname.lastIndexOf(".");
 			if (dotPos == -1) dotPos = fname.length();
 			curcartname = fname.substring(slashPos+1, dotPos);
-// 			PRINTLN("cartname = " + curcartname);
+ 			//PRINTLN("cartname = " + curcartname);
 
 			rcFiles.remove(fname);
 			rcFiles.add(0, fname);
