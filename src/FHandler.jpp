@@ -63,6 +63,7 @@ public final class FHandler {
 		return path;
 	}
 	
+#ifndef USE_JAVA_MOBILE
 	public static InputStream getInputStream(String fname) throws IOException {
 		String error = "";
 		try {
@@ -79,6 +80,7 @@ public final class FHandler {
 		};
 		throw new IOException(error);
 	}
+#endif
 
 	public static DataInputStream getDataInputStream(String fname) throws IOException {
 #ifndef USE_JAVA_MOBILE
